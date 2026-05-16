@@ -15,7 +15,7 @@ portfolio = {
     "TGT": {"shares": 1.1576, "average_cost": 129.59}    
 }
 
-st.title("Fractional Share Performance Dashboard")
+st.title("Portfolio Performance Dashboard")
 st.markdown("Monitoring precise returns, momentum, and technical indicators.")
 
 # --- Data Fetching Function ---
