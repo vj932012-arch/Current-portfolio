@@ -3,7 +3,7 @@ import yfinance as yf
 import pandas as pd
 import pandas_ta as ta
 import plotly.graph_objects as go
-import plotly.express as px  # Needed for the pie chart
+import plotly.express as px  
 from plotly.subplots import make_subplots
 from datetime import datetime, timedelta
 
@@ -51,21 +51,33 @@ st.markdown(
 )
 
 # --- Enhanced Data Fetching Functions ---
-@st.cache_data(ttl=900) # Reduced to 15 mins for more active tracking
+@st.cache_data(ttl=900) 
 def get_comprehensive_stock_data(tickers, period="1y"):
     return yf.download(tickers, period=period, group_by='ticker')
 
-@st.cache_data(ttl=3600) # Fundamentals don't change as fast, cache for 1 hour
+@st.cache_data(ttl=3600) 
 def get_fundamental_data(ticker):
     try:
         info = yf.Ticker(ticker).info
-        fwd_pe = info.get('forwardPE', 'N/A')
-        div_yield = info.get('dividendYield', 0)
         
-        # Format values cleanly
-        if isinstance(fwd_pe, float): fwd_pe = round(fwd_pe, 2)
-        div_yield_str = f"{div_yield * 100:.2f}%" if div_yield and div_yield > 0 else "N/A"
+        # ETFs use 'trailingPE', Stocks use 'forwardPE'
+        fwd_pe = info.get('forwardPE') or info.get('trailingPE') or 'N/A'
         
+        # ETFs use 'yield', Stocks use 'dividendYield'
+        div_yield = info.get('dividendYield') or info.get('yield') or 0
+        
+        if isinstance(fwd_pe, float): 
+            fwd_pe = round(fwd_pe, 2)
+            
+        # Safely handle yfinance's inconsistent decimal vs percentage returns
+        if div_yield and div_yield > 0:
+            if div_yield > 1: # If yfinance already returned it as 2.5 instead of 0.025
+                div_yield_str = f"{div_yield:.2f}%"
+            else:
+                div_yield_str = f"{div_yield * 100:.2f}%"
+        else:
+            div_yield_str = "N/A"
+            
         return fwd_pe, div_yield_str
     except Exception:
         return "N/A", "N/A"
@@ -104,7 +116,7 @@ col3.metric("Total Return (%)", f"{total_return_pct:.2f}%")
 
 st.markdown("---")
 
-# FEATURE 3: Portfolio Concentration Visualization
+# Portfolio Concentration Visualization
 st.subheader("Current Capital Allocation")
 df_alloc = pd.DataFrame(allocation_data)
 fig_pie = px.pie(df_alloc, values='Value', names='Asset', hole=0.4, 
@@ -143,7 +155,7 @@ for i, ticker in enumerate(tickers):
         rsi_series = ticker_data.ta.rsi(length=14)
         current_rsi_value = rsi_series.iloc[-1] if not rsi_series.empty else "N/A"
         
-        # FEATURE 1: Automated Fundamentals
+        # Automated Fundamentals
         fwd_pe, div_yield = get_fundamental_data(ticker)
         
         st.metric(label="Current Price", value=f"${current_close_price:.2f}", delta=f"{return_pct:.2f}% vs Avg Cost")
@@ -172,7 +184,7 @@ for i, ticker in enumerate(tickers):
 
 st.markdown("---")
 
-# --- FEATURE 2: Dynamic Traffic Light Alert System ---
+# --- Dynamic Traffic Light Alert System ---
 st.header("🚦 Active Action Alerts")
 alerts_triggered = False
 
