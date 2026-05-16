@@ -16,7 +16,7 @@ portfolio = {
     "TGT": {"shares": 1.1576, "average_cost": 129.59}
 }
 
-st.title("Fractional Share Performance & Rotation Dashboard")
+st.title("Portfolio Performance & Rotation Dashboard")
 st.markdown("Monitoring precise returns, momentum, and technical indicators, including RSI.")
 
 # --- Custom Styling for Dynamic Light/Dark Themes (CSS) ---
